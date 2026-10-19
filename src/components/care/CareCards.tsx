@@ -1,0 +1,41 @@
+import { CalendarDays, ChevronRight, Ellipsis, MessageSquare, Pill, Video } from 'lucide-react'
+import type { Appointment, Medication, Message } from '../../data/careconnect'
+import { Avatar, Badge, Button, Card } from '../ui/Primitives'
+
+export function AppointmentCard({ appointment }: { appointment: Appointment }) {
+  const telehealth = appointment.type === 'Telehealth'
+  return <Card className="flex min-h-52 flex-col p-4">
+    <div className="flex items-center justify-between"><span className="icon-tile"><CalendarDays size={18} /></span><Badge tone={telehealth ? 'info' : 'success'}>{appointment.type}</Badge></div>
+    <h3 className="mt-3 text-[13px] font-bold text-ink">{appointment.provider}</h3>
+    <p className="mt-1 text-xs text-muted">{appointment.specialty}</p>
+    <ul className="mt-4 space-y-1 text-xs text-muted"><li>• &nbsp;{appointment.date}</li><li>• &nbsp;{appointment.location}</li></ul>
+    <div className="mt-auto flex items-end gap-2 pt-4"><Button variant="secondary">Reschedule</Button>{telehealth && <Button><Video size={15} />Join</Button>}<button className="ml-auto rounded p-2" aria-label={`More options for ${appointment.provider}`}><Ellipsis size={18} /></button></div>
+  </Card>
+}
+
+export function MedicationRow({ medication, compact = false }: { medication: Medication; compact?: boolean }) {
+  return <div className={`grid items-center gap-3 border-b border-border last:border-0 ${compact ? 'grid-cols-[32px_1fr_auto] px-4 py-3' : 'grid-cols-[32px_1.4fr_1.6fr_1fr_1fr_auto] px-5 py-4'}`}>
+    <span className="icon-tile icon-tile-warm"><Pill size={17} /></span>
+    <div><strong className="block text-xs text-ink">{medication.name} <span className="font-normal text-muted">{medication.dosage}</span></strong>{compact && <span className="text-[10px] text-muted">{medication.schedule}</span>}</div>
+    {!compact && <><span>{medication.schedule}</span><span>{medication.prescriber}</span><span>{medication.refill}</span></>}
+    <Badge tone={medication.status === 'Missed' ? 'danger' : 'success'}>{medication.status}</Badge>
+  </div>
+}
+
+export function MessageRow({ message, selected = false }: { message: Message; selected?: boolean }) {
+  return <div className={`grid grid-cols-[34px_1fr_auto] gap-3 border-b border-border p-4 ${selected ? 'bg-[#e8f3ff] shadow-[inset_2px_0_0_#1177e8]' : 'bg-white'}`}>
+    <Avatar initials={message.initials} size="sm" />
+    <div className="min-w-0"><strong className="block truncate text-xs text-ink">{message.sender}</strong><span className="block truncate text-[11px] text-ink">{message.subject}</span><span className="block truncate text-[10px] text-muted">{message.preview}</span></div>
+    <div className="flex items-start gap-2 text-[10px] text-muted"><span>{message.time}</span>{message.unread && <span className="mt-1 size-1.5 rounded-full bg-blue" />}</div>
+  </div>
+}
+
+export function SummaryCard({ icon, value, label, tone = 'blue' }: { icon: React.ReactNode; value: string; label: string; tone?: 'blue' | 'warm' }) {
+  return <Card className="flex min-h-[84px] items-center gap-3 p-4"><span className={`icon-tile size-10 ${tone === 'warm' ? 'icon-tile-warm' : ''}`}>{icon}</span><div><strong className="block text-lg text-ink">{value}</strong><span className="block max-w-28 text-[10px] text-muted">{label}</span></div><ChevronRight className="ml-auto text-[#91a6b5]" size={17} /></Card>
+}
+
+export function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: string }) {
+  return <div className="mb-3 flex items-end justify-between"><div><h2 className="text-sm font-bold text-ink">{title}</h2>{subtitle && <p className="text-[10px] text-muted">{subtitle}</p>}</div>{action && <button className="inline-flex items-center gap-1 text-blue">{action}<ChevronRight size={16} /></button>}</div>
+}
+
+export function InlineMessageAction() { return <Button><MessageSquare size={15} />Message</Button> }
