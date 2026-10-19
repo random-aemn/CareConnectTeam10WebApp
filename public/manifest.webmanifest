@@ -1,0 +1,10 @@
+{
+  "name": "CareConnect",
+  "short_name": "CareConnect",
+  "description": "Securely manage appointments, medications, health records, and care-team messages.",
+  "start_url": "/overview",
+  "display": "standalone",
+  "background_color": "#f3f6f8",
+  "theme_color": "#06263a",
+  "orientation": "any"
+}
