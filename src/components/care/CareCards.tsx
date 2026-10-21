@@ -1,24 +1,29 @@
 import { CalendarDays, ChevronRight, Ellipsis, MessageSquare, Pill, Video } from 'lucide-react'
+import { useState } from 'react'
 import type { Appointment, Medication, Message } from '../../data/careconnect'
 import { Avatar, Badge, Button, Card } from '../ui/Primitives'
+import { useCareConnect } from '../../state/CareConnectContext'
 
 export function AppointmentCard({ appointment }: { appointment: Appointment }) {
+  const { openModal } = useCareConnect(); const [menu, setMenu] = useState(false)
   const telehealth = appointment.type === 'Telehealth'
   return <Card className="flex min-h-52 flex-col p-4">
     <div className="flex items-center justify-between"><span className="icon-tile"><CalendarDays size={18} /></span><Badge tone={telehealth ? 'info' : 'success'}>{appointment.type}</Badge></div>
     <h3 className="mt-3 text-[13px] font-bold text-ink">{appointment.provider}</h3>
     <p className="mt-1 text-xs text-muted">{appointment.specialty}</p>
     <ul className="mt-4 space-y-1 text-xs text-muted"><li>• &nbsp;{appointment.date}</li><li>• &nbsp;{appointment.location}</li></ul>
-    <div className="mt-auto flex items-end gap-2 pt-4"><Button variant="secondary">Reschedule</Button>{telehealth && <Button><Video size={15} />Join</Button>}<button className="ml-auto rounded p-2" aria-label={`More options for ${appointment.provider}`}><Ellipsis size={18} /></button></div>
+    <div className="mt-auto flex items-end gap-2 pt-4">{appointment.status === 'Upcoming' && <><Button variant="secondary" onClick={() => openModal({ type: 'appointment', appointment })}>Reschedule</Button>{telehealth && <Button onClick={() => openModal({ type: 'telehealth', appointment })}><Video size={15} />Join</Button>}</>}<div className="relative ml-auto"><button className="rounded p-2" aria-label={`More options for ${appointment.provider}`} aria-expanded={menu} onClick={() => setMenu(!menu)}><Ellipsis size={18} /></button>{menu && <div className="absolute bottom-10 right-0 z-20 w-44 rounded-md border border-border bg-white p-1 text-xs shadow-xl"><button onClick={() => { openModal({ type: 'appointment-details', appointment }); setMenu(false) }} className="block w-full rounded px-3 py-2 text-left hover:bg-canvas">View details</button>{appointment.status === 'Upcoming' && <button onClick={() => { openModal({ type: 'cancel-appointment', appointment }); setMenu(false) }} className="block w-full rounded px-3 py-2 text-left text-[#b42318] hover:bg-[#fff0ed]">Cancel appointment</button>}</div>}</div></div>
   </Card>
 }
 
-export function MedicationRow({ medication, compact = false }: { medication: Medication; compact?: boolean }) {
-  return <div className={`grid items-center gap-3 border-b border-border last:border-0 ${compact ? 'grid-cols-[32px_1fr_auto] px-4 py-3' : 'grid-cols-[32px_1.4fr_1.6fr_1fr_1fr_auto] px-5 py-4'}`}>
+export function MedicationRow({ medication, compact = false, interactive = false }: { medication: Medication; compact?: boolean; interactive?: boolean }) {
+  const { dispatch, notify } = useCareConnect(); const time = medication.reminderTimes?.[0] ?? '08:00'; const doseKey = `${new Date().toISOString().slice(0, 10)}|${time}`; const taken = medication.takenDoses?.includes(doseKey)
+  return <div className={`grid items-center gap-3 border-b border-border last:border-0 ${compact ? 'grid-cols-[32px_1fr_auto] px-4 py-3' : interactive ? 'grid-cols-[32px_1.3fr_1.5fr_.8fr_.8fr_auto_1.1fr] px-5 py-4' : 'grid-cols-[32px_1.4fr_1.6fr_1fr_1fr_auto] px-5 py-4'}`}>
     <span className="icon-tile icon-tile-warm"><Pill size={17} /></span>
     <div><strong className="block text-xs text-ink">{medication.name} <span className="font-normal text-muted">{medication.dosage}</span></strong>{compact && <span className="text-[10px] text-muted">{medication.schedule}</span>}</div>
     {!compact && <><span>{medication.schedule}</span><span>{medication.prescriber}</span><span>{medication.refill}</span></>}
     <Badge tone={medication.status === 'Missed' ? 'danger' : 'success'}>{medication.status}</Badge>
+    {interactive && <Button variant={taken ? 'secondary' : 'primary'} className="text-xs" aria-pressed={taken} onClick={() => { dispatch({ type: 'toggle-medication-dose', id: medication.id, doseKey }); notify(taken ? `${medication.name} marked not taken.` : `${medication.name} marked as taken.`) }}>{taken ? 'Taken' : 'Mark taken'}</Button>}
   </div>
 }
 

@@ -1,6 +1,6 @@
 # CareConnect Web App
 
-CareConnect is a responsive patient-portal UI prototype built from the CareConnect Figma designs. It provides static overview, appointment, medication, message, health-record, care-team, and preference screens for mobile, tablet, and desktop layouts.
+CareConnect is a responsive patient-portal demo built from the CareConnect Figma designs and the earlier Electron prototype. It provides locally persisted appointment, medication, messaging, health-record, care-team, and preference experiences for mobile, tablet, and desktop layouts. No data leaves the browser.
 
 ## Technology
 
@@ -53,10 +53,11 @@ Vite will print the local URL, normally `http://localhost:5173`. Open that URL i
 | `/overview` | Dashboard and daily summary |
 | `/appointments` | Upcoming appointments |
 | `/medications` | Active medications |
+| `/medications/add` | Add-medication workflow |
 | `/messages` | Message list and selected message preview |
 | `/health-records` | Laboratory and health-record summary |
 | `/care-team` | Care-team directory |
-| `/preferences` | Static preference controls |
+| `/preferences` | Locally saved preferences and demo-data reset |
 
 Unknown URLs display the application’s not-found page.
 
@@ -138,7 +139,7 @@ Run the Vitest test suite once:
 pnpm test
 ```
 
-The current tests use React Testing Library and JSDOM. They verify that the overview and feature routes render their expected content and navigation.
+The current tests use React Testing Library and JSDOM. They verify that the overview and feature routes render their expected content and navigation. Clear site data in the browser when you need to manually start from the original mock dataset.
 
 Test files use the `.test.tsx` suffix. Shared initialization is in `src/test/setup.ts`, and the test environment is configured in `vitest.config.ts`.
 
@@ -206,10 +207,12 @@ src/
   app/                 Router, route metadata, and route tests
   components/
     care/              Appointment, medication, message, and summary components
+    dialogs/           Accessible responsive workflow dialogs
     ui/                Shared UI primitives and page layout
   data/                Typed sample CareConnect data
   layouts/             Responsive application shells and navigation
   pages/               Route-level page components
+  state/               Demo state, local persistence, modal state, and notifications
   styles/              Tailwind theme tokens and global styles
   test/                Shared test setup
 public/                Manifest and application icon
@@ -217,9 +220,9 @@ public/                Manifest and application icon
 
 ## Current limitations
 
-- Data is static and intended only for UI demonstration.
-- Controls generally preserve the appearance of the design but do not execute healthcare workflows.
-- Preferences do not persist.
-- Search and notification controls are visual placeholders.
+- All workflows use local mock data and are intended only for UI demonstration.
+- Demo records persist in browser `localStorage`; Preferences can reset the records to their original values.
+- Search, notifications, appointment actions, medication dose tracking, and messaging are front-end simulations only.
+- File, Edit, View, and Help menu surfaces from the Electron app are intentionally excluded.
 - The manifest is present, but the application does not register a service worker or cache patient data offline.
 - The application must not be treated as a production healthcare system or as a source of real patient information.
