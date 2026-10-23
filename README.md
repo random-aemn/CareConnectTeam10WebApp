@@ -1,6 +1,8 @@
 # CareConnect Web App
 
-CareConnect is a responsive patient-portal demo built from the CareConnect Figma designs and the earlier Electron prototype. It provides locally persisted appointment, medication, messaging, health-record, care-team, and preference experiences for mobile, tablet, and desktop layouts. No data leaves the browser.
+CareConnect is a responsive patient-portal demo built from the CareConnect Figma designs and the earlier Electron
+prototype. It provides locally persisted appointment, medication, messaging, health-record, care-team, and preference
+experiences for mobile, tablet, and desktop layouts. No data leaves the browser.
 
 ## Technology
 
@@ -18,46 +20,69 @@ CareConnect is a responsive patient-portal demo built from the CareConnect Figma
 
 - Node.js 20 or newer
 - pnpm 10 or newer
+- Windows Terminal with a PowerShell profile, or a Bash-compatible terminal such as Git Bash, WSL, macOS Terminal, or
+  Linux Terminal
 
-Check the installed versions:
+If pnpm is not already available, enable the Node.js Corepack shim and activate pnpm 10:
 
 ```powershell
+corepack enable
+corepack prepare pnpm@10 --activate
+```
+
+The same commands work in Bash:
+
+```bash
+corepack enable
+corepack prepare pnpm@10 --activate
+```
+
+Check the installed versions with `node --version` and `pnpm --version`.
+
+## Launch using Windows Terminal
+
+Open Windows Terminal, select a PowerShell profile, and run:
+
+```powershell
+cd "path/to/file"
 node --version
 pnpm --version
-```
-
-## Install dependencies
-
-From the repository root, run:
-
-```powershell
-pnpm install
-```
-
-Use the committed `pnpm-lock.yaml` file so every developer receives compatible dependency versions.
-
-## Run the application
-
-Start the Vite development server:
-
-```powershell
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Vite will print the local URL, normally `http://localhost:5173`. Open that URL in a browser. The root route redirects to `/overview`.
+Vite prints the development URL, normally `http://localhost:5173`. Keep that terminal open while using the application
+and press `Ctrl+C` when you want to stop the server.
+
+If the repository is stored elsewhere, replace the path passed to `cd` with the local repository path.
+
+## Launch using Bash
+
+Open Git Bash, WSL, macOS Terminal, or a Linux terminal. Change to the repository and start the development server:
+
+```bash
+cd /path/to/CareConnectTeam10WebApp
+node --version
+pnpm --version
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Use the committed `pnpm-lock.yaml` through `pnpm install --frozen-lockfile` so every developer receives the locked
+dependency versions. Open the Vite URL in a browser; the root route redirects to `/overview`.
 
 ### Application routes
 
-| Route | Screen |
-| --- | --- |
-| `/overview` | Dashboard and daily summary |
-| `/appointments` | Upcoming appointments |
-| `/medications` | Active medications |
-| `/medications/add` | Add-medication workflow |
-| `/messages` | Message list and selected message preview |
-| `/health-records` | Laboratory and health-record summary |
-| `/care-team` | Care-team directory |
-| `/preferences` | Locally saved preferences and demo-data reset |
+| Route              | Screen                                        |
+|--------------------|-----------------------------------------------|
+| `/overview`        | Dashboard and daily summary                   |
+| `/appointments`    | Upcoming appointments                         |
+| `/medications`     | Active medications                            |
+| `/medications/add` | Add-medication workflow                       |
+| `/messages`        | Message list and selected message preview     |
+| `/health-records`  | Laboratory and health-record summary          |
+| `/care-team`       | Care-team directory                           |
+| `/preferences`     | Locally saved preferences and demo-data reset |
 
 Unknown URLs display the application’s not-found page.
 
@@ -69,7 +94,8 @@ The UI uses three responsive shell presentations:
 - Tablet, 768–1023 px: compact navigation rail
 - Desktop, 1024 px and wider: full navigation sidebar and toolbar
 
-The page components are shared across viewport sizes. Tailwind breakpoints change their grids, spacing, and visibility rather than maintaining separate copies of every page.
+The page components are shared across viewport sizes. Tailwind breakpoints change their grids, spacing, and visibility
+rather than maintaining separate copies of every page.
 
 For comparison with the source designs, test these reference viewport sizes in browser developer tools:
 
@@ -95,7 +121,8 @@ Vite supports hot module replacement, so most source edits appear without restar
 
 ### React Developer Tools
 
-The optional React Developer Tools browser extension can inspect the component tree, props, state, lazy-loaded routes, and mobile navigation state. It is not required to run the application.
+The optional React Developer Tools browser extension can inspect the component tree, props, state, lazy-loaded routes,
+and mobile navigation state. It is not required to run the application.
 
 ### Debug routing
 
@@ -110,7 +137,8 @@ If a route does not display:
 
 ### Debug responsive layouts
 
-The viewport-specific application shells are defined in `src/layouts/AppShell.tsx`. Shared page content is in `src/pages`, and reusable healthcare components are in `src/components/care`.
+The viewport-specific application shells are defined in `src/layouts/AppShell.tsx`. Shared page content is in
+`src/pages`, and reusable healthcare components are in `src/components/care`.
 
 When debugging a layout issue, first determine whether it belongs to:
 
@@ -123,7 +151,8 @@ This separation helps avoid applying page-specific fixes to the entire applicati
 
 ### Debug styles
 
-Tailwind is integrated through the Vite plugin. Global theme tokens and reusable CSS classes are in `src/styles/index.css`.
+Tailwind is integrated through the Vite plugin. Global theme tokens and reusable CSS classes are in
+`src/styles/index.css`.
 
 If a Tailwind change does not appear:
 
@@ -133,39 +162,52 @@ If a Tailwind change does not appear:
 
 ## Test the application
 
-Run the Vitest test suite once:
+### Windows Terminal (PowerShell)
 
 ```powershell
+cd "C:\Users\chris\UMGC-projects\SWEN-661\Team_10_CareConnect\CareConnectTeam10WebApp"
 pnpm test
 ```
 
-The current tests use React Testing Library and JSDOM. They verify that the overview and feature routes render their expected content and navigation. Clear site data in the browser when you need to manually start from the original mock dataset.
+### Bash
 
-Test files use the `.test.tsx` suffix. Shared initialization is in `src/test/setup.ts`, and the test environment is configured in `vitest.config.ts`.
+```bash
+cd /path/to/CareConnectTeam10WebApp
+pnpm test
+```
+
+The tests use React Testing Library and JSDOM. They verify routing, core navigation interactions, the mobile message
+workflow, and that tested renders produce no console errors or warnings. Clear site data in the browser when you need to
+manually start from the original mock dataset.
+
+Test files use the `.test.tsx` suffix. Shared initialization is in `src/test/setup.ts`, and the test environment is
+configured in `vitest.config.ts`.
 
 Run tests interactively in watch mode:
 
-```powershell
+```
 pnpm exec vitest
 ```
 
 Run one test file:
 
-```powershell
+```
 pnpm exec vitest src/app/App.test.tsx
 ```
 
 ## Lint and type-check
 
+These commands are identical in PowerShell and Bash.
+
 Run ESLint:
 
-```powershell
+```text
 pnpm lint
 ```
 
 Run TypeScript without producing output files:
 
-```powershell
+```text
 pnpm exec tsc -b
 ```
 
@@ -175,15 +217,16 @@ The production build also runs the TypeScript check before bundling.
 
 Run:
 
-```powershell
+```
 pnpm build
 ```
 
-The optimized application is written to `dist/`. The build includes route-level code splitting for the individual CareConnect pages.
+The optimized application is written to `dist/`. The build includes route-level code splitting for the individual
+CareConnect pages.
 
 Preview the production build locally:
 
-```powershell
+```
 pnpm exec vite preview
 ```
 
@@ -191,7 +234,7 @@ Vite will print the preview URL, normally `http://localhost:4173`.
 
 ## Recommended verification before committing
 
-```powershell
+```
 pnpm test
 pnpm lint
 pnpm exec tsc -b
@@ -212,7 +255,8 @@ src/
   data/                Typed sample CareConnect data
   layouts/             Responsive application shells and navigation
   pages/               Route-level page components
-  state/               Demo state, local persistence, modal state, and notifications
+  hooks/               Shared keyboard-shortcut and offline-queue hooks
+  state/               Context provider, reducer, local persistence, modal state, and notifications
   styles/              Tailwind theme tokens and global styles
   test/                Shared test setup
 public/                Manifest and application icon
@@ -223,6 +267,8 @@ public/                Manifest and application icon
 - All workflows use local mock data and are intended only for UI demonstration.
 - Demo records persist in browser `localStorage`; Preferences can reset the records to their original values.
 - Search, notifications, appointment actions, medication dose tracking, and messaging are front-end simulations only.
-- File, Edit, View, and Help menu surfaces from the Electron app are intentionally excluded.
-- The manifest is present, but the application does not register a service worker or cache patient data offline.
+- Native Electron File, Edit, View, and window menus are not part of the browser application. CareConnect Help remains
+  available from the toolbar and mobile menu.
+- The PWA service worker caches the application shell and previously requested local assets. Demo changes use local
+  storage and are queued for simulated synchronization when the browser returns online; there is no production backend.
 - The application must not be treated as a production healthcare system or as a source of real patient information.
