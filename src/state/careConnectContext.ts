@@ -1,6 +1,7 @@
 import {createContext, useContext} from 'react'
 import type {Appointment, Message} from '../data/careconnect'
 import type {AppAction, AppState} from './careConnectState'
+import type {QueuedOperation} from '../pwa/syncQueue'
 
 export type ModalState =
     | { type: 'appointment'; appointment?: Appointment }
@@ -22,7 +23,14 @@ export interface CareConnectValue {
     toast: string;
     notify: (message: string) => void;
     online: boolean;
-    pendingSync: number
+    pendingSync: number;
+    needsAttention: number;
+    syncing: boolean;
+    lastSync: string | null;
+    syncOperations: QueuedOperation[];
+    queuePreferenceChange: (payload: unknown) => void;
+    retrySync: (operation: QueuedOperation) => void;
+    clearOfflineData: () => Promise<void>
 }
 
 export const CareConnectContext = createContext<CareConnectValue | null>(null)

@@ -3,15 +3,17 @@ import {AppointmentCard, MedicationRow, MessageRow, SectionHeader, SummaryCard} 
 import {Button, Card} from '../components/ui/Primitives'
 import {useCareConnect} from '../state/careConnectContext'
 import {useNavigate} from 'react-router-dom'
+import {usePageHeadingFocus} from '../hooks/usePageHeadingFocus'
 
 export default function OverviewPage() {
     const {state, openModal} = useCareConnect();
+    const headingRef = usePageHeadingFocus()
     const navigate = useNavigate();
     const appointments = state.appointments.filter((item) => item.status === 'Upcoming').slice(0, 3);
     const {medications, messages} = state
     return <div className="mx-auto w-full max-w-[1290px] px-5 py-5 md:px-6 md:py-6 lg:px-[30px] lg:py-[30px]">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
-            <div><p className="text-[9px] font-bold uppercase tracking-[.09em] text-blue">Sunday, August 30</p><h1
+            <div><p className="text-[9px] font-bold uppercase tracking-[.09em] text-blue">Sunday, August 30</p><h1 ref={headingRef} tabIndex={-1}
                 className="mt-1 font-serif text-[26px] font-bold leading-tight text-navy">Good morning, Jordan</h1><p
                 className="mt-1 text-xs text-muted">Here’s what needs your attention today.</p></div>
             <Button variant="secondary" onClick={() => navigate('/health-records')}><Activity size={17}/>View health

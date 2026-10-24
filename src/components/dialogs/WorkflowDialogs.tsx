@@ -63,7 +63,6 @@ export default function WorkflowDialogs() {
         dispatch({type: old ? 'update-appointment' : 'add-appointment', appointment});
         closeModal();
         navigate('/appointments');
-        notify(old ? 'Appointment rescheduled.' : 'Appointment request submitted.')
     }
     const submitMessage = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -90,7 +89,6 @@ export default function WorkflowDialogs() {
         }
         closeModal();
         navigate('/messages');
-        notify(replyTo ? 'Reply sent.' : 'Message sent.')
     }
 
     if (modal.type === 'appointment') return <Dialog
@@ -107,6 +105,8 @@ export default function WorkflowDialogs() {
         </select></Field>
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Preferred date" required><input name="date" type="date"
                                                                                                  min={todayValue()}
+                                                                                                 aria-invalid={Boolean(appointmentError)}
+                                                                                                 aria-describedby={appointmentError ? 'appointment-date-error' : undefined}
                                                                                                  defaultValue={modal.appointment?.dateValue}
                                                                                                  required/></Field><Field
             label="Preferred time" required><select name="time" defaultValue={modal.appointment?.timeValue ?? ''}
@@ -114,7 +114,7 @@ export default function WorkflowDialogs() {
             <option value="">Choose a time…</option>
             {timeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select></Field></div>
-        {appointmentError && <p className="text-xs text-[#d94b2b]" role="alert">{appointmentError}</p>}<Field
+        {appointmentError && <p id="appointment-date-error" className="text-xs text-[#c53b20]" role="alert">{appointmentError}</p>}<Field
         label="Additional information"><textarea name="notes" defaultValue={modal.appointment?.notes}
                                                  placeholder="Symptoms, reason for visit, or other details…"/></Field>
     </Dialog>
@@ -178,7 +178,6 @@ export default function WorkflowDialogs() {
                                                                                                     id: modal.appointment.id
                                                                                                 });
                                                                                                 closeModal();
-                                                                                                notify('Appointment cancelled.')
                                                                                             }}>Cancel
                                                                 appointment</Button></>}><p>Cancel your appointment
         with {modal.appointment.provider} on {modal.appointment.date}?</p></Dialog>

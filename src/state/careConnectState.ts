@@ -17,6 +17,7 @@ export interface AppState {
 }
 
 export type AppAction =
+    | { type: 'hydrate'; state: AppState }
     | { type: 'add-appointment'; appointment: Appointment }
     | { type: 'update-appointment'; appointment: Appointment }
     | { type: 'cancel-appointment'; id: number }
@@ -51,6 +52,8 @@ export const initialState: AppState = {
 
 export function appReducer(state: AppState, action: AppAction): AppState {
     switch (action.type) {
+        case 'hydrate':
+            return action.state
         case 'add-appointment':
             return {...state, appointments: [...state.appointments, action.appointment]}
         case 'update-appointment':
@@ -107,10 +110,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 }
 
 const STORAGE_KEY = 'careconnect-web-demo-state-v1'
+const RETENTION_MS = 30 * 24 * 60 * 60 * 1000
 
 export function loadState(): AppState {
     try {
-        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as Partial<AppState> | null
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as {savedAt?: string; state?: Partial<AppState>} | Partial<AppState> | null
+        if (stored && 'savedAt' in stored && stored.savedAt && Date.now() - new Date(stored.savedAt).getTime() > RETENTION_MS) {
+            localStorage.removeItem(STORAGE_KEY)
+            return initialState
+        }
+        const parsed = (stored && 'state' in stored ? stored.state ?? null : stored) as Partial<AppState> | null
         if (!parsed || !Array.isArray(parsed.appointments) || !Array.isArray(parsed.medications) || !Array.isArray(parsed.messages)) return initialState
         return {
             ...initialState,
@@ -127,5 +136,9 @@ export function loadState(): AppState {
 }
 
 export function saveState(state: AppState) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({savedAt: new Date().toISOString(), state}))
+}
+
+export function clearSavedState() {
+    localStorage.removeItem(STORAGE_KEY)
 }
