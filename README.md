@@ -262,13 +262,32 @@ src/
 public/                Manifest and application icon
 ```
 
+## PWA and offline demo behavior
+
+The production build includes a standalone manifest, Android and Apple icons, four application shortcuts, an offline
+fallback, controlled update prompts, and an engagement-based installation prompt. Use the production preview when
+testing installation or service-worker behavior; development mode is not a reliable service-worker test environment.
+
+CareConnect keeps approved demo records and queued demo mutations in IndexedDB. The queue records waiting, syncing, synced, and needs-attention
+states and processes pending work when connectivity returns. The demo synchronization adapter never sends information
+to a healthcare system. Application state retained for offline demonstration expires after 30 days, and Preferences
+provides a Clear offline data action for local records, queued operations, and CareConnect caches.
+
+The service worker separates shell, static, navigation, and approved data caches. It does not cache authorization
+headers, failed responses, opaque responses, or responses marked private or no-store. New service-worker versions wait
+for the user to choose Update now before activation.
+
+To test installation, run `pnpm build`, then `pnpm exec vite preview`, open the localhost URL, and visit the application
+again or keep it open for at least 30 seconds. Android Chrome and desktop Chromium browsers can use the in-app install
+action. On iOS Safari, use Share and then Add to Home Screen.
+
 ## Current limitations
 
 - All workflows use local mock data and are intended only for UI demonstration.
-- Demo records persist in browser `localStorage`; Preferences can reset the records to their original values.
+- Demo records persist locally for at most 30 days; Preferences can reset them or clear all offline data.
 - Search, notifications, appointment actions, medication dose tracking, and messaging are front-end simulations only.
 - Native Electron File, Edit, View, and window menus are not part of the browser application. CareConnect Help remains
   available from the toolbar and mobile menu.
-- The PWA service worker caches the application shell and previously requested local assets. Demo changes use local
-  storage and are queued for simulated synchronization when the browser returns online; there is no production backend.
+- The PWA service worker caches the application shell and approved local assets. Demo mutations are queued in IndexedDB
+  for simulated synchronization when the browser returns online; there is no production backend or cross-device sync.
 - The application must not be treated as a production healthcare system or as a source of real patient information.

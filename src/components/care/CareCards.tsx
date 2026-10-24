@@ -5,7 +5,7 @@ import {Avatar, Badge, Button, Card} from '../ui/Primitives'
 import {useCareConnect} from '../../state/careConnectContext'
 
 export function AppointmentCard({appointment}: { appointment: Appointment }) {
-    const {openModal} = useCareConnect();
+    const {openModal, online, notify} = useCareConnect();
     const [menu, setMenu] = useState(false)
     const telehealth = appointment.type === 'Telehealth'
     return <Card className="flex min-h-52 flex-col p-4">
@@ -20,12 +20,12 @@ export function AppointmentCard({appointment}: { appointment: Appointment }) {
         <div className="mt-auto flex items-end gap-2 pt-4">{appointment.status === 'Upcoming' && <><Button
             variant="secondary"
             onClick={() => openModal({type: 'appointment', appointment})}>Reschedule</Button>{telehealth &&
-            <Button onClick={() => openModal({type: 'telehealth', appointment})}><Video size={15}/>Join</Button>}</>}
+            <Button disabled={!online} title={online ? undefined : 'Telehealth requires an internet connection'} onClick={() => online ? openModal({type: 'telehealth', appointment}) : notify('Telehealth requires an internet connection.')}><Video size={15}/>Join</Button>}</>}
             <div className="relative ml-auto">
                 <button className="rounded p-2" aria-label={`More options for ${appointment.provider}`}
-                        aria-expanded={menu} onClick={() => setMenu(!menu)}><Ellipsis size={18}/></button>
+                        aria-controls={`appointment-menu-${appointment.id}`} aria-expanded={menu} onClick={() => setMenu(!menu)}><Ellipsis size={18}/></button>
                 {menu && <div
-                    className="absolute bottom-10 right-0 z-20 w-44 rounded-md border border-border bg-white p-1 text-xs shadow-xl">
+                    id={`appointment-menu-${appointment.id}`} role="region" aria-label="Appointment options" className="absolute bottom-10 right-0 z-20 w-44 rounded-md border border-border bg-white p-1 text-xs shadow-xl">
                     <button onClick={() => {
                         openModal({type: 'appointment-details', appointment});
                         setMenu(false)
@@ -69,7 +69,7 @@ export function MedicationRow({medication, compact = false, interactive = false}
 export function MessageRow({message, selected = false}: { message: Message; selected?: boolean }) {
     const correspondent = message.direction === 'outgoing' ? `To: ${message.recipient}` : message.sender
     return <div
-        className={`grid grid-cols-[34px_1fr_auto] gap-3 border-b border-border p-4 ${selected ? 'bg-[#e8f3ff] shadow-[inset_2px_0_0_#1177e8]' : 'bg-white'}`}>
+        className={`grid grid-cols-[34px_1fr_auto] gap-3 border-b border-border p-4 ${selected ? 'bg-[#e8f3ff] shadow-[inset_2px_0_0_#0b68cf]' : 'bg-white'}`}>
         <Avatar initials={message.initials} size="sm"/>
         <div className="min-w-0"><strong className="block truncate text-xs text-ink">{correspondent}</strong><span
             className="block truncate text-[11px] text-ink">{message.subject}</span><span

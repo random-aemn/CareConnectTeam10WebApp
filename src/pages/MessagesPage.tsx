@@ -19,7 +19,7 @@ export default function MessagesPage() {
                 <button key={message.id} onClick={() => {
                     dispatch({type: 'select-message', id: message.id});
                     setMobileThread(true)
-                }} className="block min-h-11 w-full text-left"><MessageRow message={message}
+                }} aria-current={message.id === selected?.id ? 'true' : undefined} className="block min-h-11 w-full text-left"><MessageRow message={message}
                                                                            selected={message.id === selected?.id}/>
                 </button>)}</div>
             {selected && <article className={`${mobileThread ? 'block' : 'hidden'} p-5 md:block md:p-8`}>

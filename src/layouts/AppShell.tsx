@@ -3,6 +3,7 @@ import {
     CalendarPlus,
     ChevronRight,
     CircleHelp,
+    Download,
     Menu,
     MessageSquarePlus,
     Pill,
@@ -11,11 +12,13 @@ import {
     X
 } from 'lucide-react'
 import {useCallback, useMemo, useRef, useState, type ReactNode} from 'react'
-import {NavLink, useNavigate} from 'react-router-dom'
+import {NavLink, useLocation, useNavigate} from 'react-router-dom'
 import {navigation} from '../app/route-config'
 import {Avatar} from '../components/ui/Primitives'
 import {useCareConnect} from '../state/careConnectContext'
 import {useKeyboardShortcut} from '../hooks/useKeyboardShortcut'
+import {useFocusTrap} from '../hooks/useFocusTrap'
+import {usePwaLifecycle} from '../hooks/usePwaLifecycle'
 
 function BrandBar() {
     return <div
@@ -49,7 +52,7 @@ function QuickActions({compact = false, onAction}: { compact?: boolean; onAction
         }}><CircleHelp size={17}/>Help</button>}</div>
 }
 
-function Toolbar() {
+function Toolbar({showInstall, install}: {showInstall: boolean; install: () => Promise<void>}) {
     const {state, dispatch, openModal} = useCareConnect();
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
@@ -94,24 +97,24 @@ function Toolbar() {
         <QuickActions/>
         <div className="relative mx-auto hidden md:block"><label><Search className="absolute left-3 top-2.5 text-muted"
                                                                          size={15}/><span className="sr-only">Search CareConnect</span><input
-            ref={searchRef} aria-label="Search CareConnect" value={search}
+            ref={searchRef} type="search" role="searchbox" aria-label="Search CareConnect" aria-controls="desktop-search-results" aria-expanded={Boolean(search)} value={search}
             onChange={(event) => setSearch(event.target.value)} placeholder="Search CareConnect (Ctrl/Cmd+K)"
-            className="h-9 w-[300px] rounded-md border border-[#cbd8e0] bg-[#f8fafb] pl-9 pr-3 text-sm outline-none focus:border-blue"/></label>{search &&
-            <div className="absolute top-11 w-full overflow-hidden rounded-md border border-border bg-white shadow-xl"
-                 role="listbox">{results.length ? results.map((result) => <button key={result.key}
-                                                                                  role="option"
+            className="h-9 w-[300px] rounded-md border border-[#718692] bg-[#f8fafb] pl-9 pr-3 text-sm focus:border-blue"/></label>{search &&
+            <div id="desktop-search-results" className="absolute top-11 w-full overflow-hidden rounded-md border border-border bg-white shadow-xl"
+                 role="region" aria-label="Search results">{results.length ? results.map((result) => <button key={result.key}
                                                                                   onClick={() => choose(result)}
                                                                                   className="block w-full border-b border-border px-4 py-3 text-left text-xs hover:bg-[#e8f3ff]">
                 <strong className="block">{result.label}</strong><span className="text-muted">{result.detail}</span>
             </button>) : <p className="p-4 text-xs text-muted">No matches found.</p>}</div>}</div>
         <div className="ml-auto flex items-center gap-3">
+            {showInstall && <button className="hidden items-center gap-2 rounded-md border border-[#718692] px-3 text-xs lg:flex" onClick={() => void install()}><Download size={15}/>Install CareConnect</button>}
             <div className="relative">
-                <button aria-label="Notifications" aria-expanded={menu === 'notifications'}
+                <button aria-label="Notifications" aria-controls="desktop-notifications-menu" aria-expanded={menu === 'notifications'}
                         onClick={() => setMenu(menu === 'notifications' ? null : 'notifications')}
                         className="relative rounded-md p-2"><Bell
                     size={18}/>{state.notifications.some((item) => !item.read) &&
-                    <span className="absolute right-1 top-1 size-2 rounded-full bg-[#ef5b2a]"/>}</button>
-                {menu === 'notifications' && <div
+                    <span className="absolute right-1 top-1 size-2 rounded-full bg-[#c2411f]"/>}</button>
+                {menu === 'notifications' && <div id="desktop-notifications-menu" role="region" aria-label="Notifications"
                     className="absolute right-0 top-11 w-80 rounded-md border border-border bg-white p-2 shadow-xl"><h2
                     className="px-3 py-2 text-sm font-bold">Notifications</h2>{state.notifications.map((item) => <button
                     key={item.id} onClick={() => {
@@ -126,12 +129,12 @@ function Toolbar() {
                 size={18}/></button>
             <div className="relative">
                 <button onClick={() => setMenu(menu === 'profile' ? null : 'profile')}
-                        aria-expanded={menu === 'profile'} className="flex items-center gap-3 rounded-md p-1"><Avatar
+                        aria-controls="desktop-profile-menu" aria-expanded={menu === 'profile'} className="flex items-center gap-3 rounded-md p-1"><Avatar
                     initials="JD" size="sm"/>
                     <div className="hidden text-left text-[10px] leading-tight xl:block"><strong className="block">Jordan
                         Davis</strong><span className="text-muted">Patient</span></div>
                     <ChevronRight size={16}/></button>
-                {menu === 'profile' && <div
+                {menu === 'profile' && <div id="desktop-profile-menu" role="region" aria-label="Profile options"
                     className="absolute right-0 top-11 w-48 rounded-md border border-border bg-white p-2 text-sm shadow-xl">
                     <button onClick={() => {
                         navigate('/health-records');
@@ -156,7 +159,7 @@ function NavItems({compact = false, onNavigate}: { compact?: boolean; onNavigate
             return <NavLink key={item.to} to={item.to} onClick={onNavigate} title={compact ? item.label : undefined}
                             className={({isActive}) => `mx-2 flex h-10 items-center rounded-md text-sm transition-colors ${compact ? 'justify-center px-0' : 'gap-3 px-3'} ${isActive ? 'bg-[#0f5f8c] text-white shadow-[inset_3px_0_0_#28a0ff]' : 'text-[#d7e4eb] hover:bg-white/10'}`}>
                 <Icon size={18}/><span className={compact ? 'sr-only' : ''}>{item.label}</span>{'badge' in item && <span
-                className={`${compact ? 'absolute ml-7 -mt-6' : 'ml-auto'} flex size-[18px] items-center justify-center rounded-full bg-[#ef5b2a] text-[9px] font-bold text-white`}>{item.badge}</span>}
+                className={`${compact ? 'absolute ml-7 -mt-6' : 'ml-auto'} flex size-[18px] items-center justify-center rounded-full bg-[#c2411f] text-[9px] font-bold text-white`}>{item.badge}</span>}
             </NavLink>
         })}
         <div className="mt-auto">
@@ -189,6 +192,10 @@ function MobileHeader() {
     const [search, setSearch] = useState('');
     const {state, dispatch} = useCareConnect();
     const navigate = useNavigate()
+    const drawerRef = useRef<HTMLElement>(null)
+    const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const closeDrawer = useCallback(() => setOpen(false), [])
+    useFocusTrap(open, drawerRef, menuButtonRef, closeDrawer)
     const mobileResults = useMemo<Array<{ key: string; label: string; detail: string; route: string; messageId?: number }>>(() => {
         const query = search.trim().toLowerCase();
         if (!query) return [];
@@ -213,20 +220,20 @@ function MobileHeader() {
     return <>
         <div
             className="fixed inset-x-0 top-[30px] z-40 flex h-[64px] items-center border-b border-border bg-white px-3 md:hidden">
-            <button onClick={() => setOpen(true)} aria-expanded={open} aria-label="Open navigation"
+            <button ref={menuButtonRef} onClick={() => setOpen(true)} aria-haspopup="dialog" aria-controls="mobile-navigation-drawer" aria-expanded={open} aria-label="Open navigation"
                     className="rounded-md border border-border p-2"><Menu size={20}/></button>
             <strong className="ml-3 text-sm text-ink">CareConnect</strong>
             <div className="ml-auto flex items-center gap-2">
-                <button aria-label="Notifications"
+                <button aria-label="Notifications" aria-controls="mobile-notifications-menu" aria-expanded={panel === 'notifications'}
                         onClick={() => setPanel(panel === 'notifications' ? null : 'notifications')}
                         className="relative rounded p-2"><Bell
                     size={18}/>{state.notifications.some((item) => !item.read) &&
-                    <span className="absolute right-1 top-1 size-2 rounded-full bg-[#ef5b2a]"/>}</button>
-                <button aria-label="Profile menu" onClick={() => setPanel(panel === 'profile' ? null : 'profile')}
+                    <span className="absolute right-1 top-1 size-2 rounded-full bg-[#c2411f]"/>}</button>
+                <button aria-label="Profile menu" aria-controls="mobile-profile-menu" aria-expanded={panel === 'profile'} onClick={() => setPanel(panel === 'profile' ? null : 'profile')}
                         className="flex items-center gap-1 rounded p-1"><Avatar initials="JD" size="sm"/><ChevronRight
                     size={15}/></button>
             </div>
-            {panel === 'notifications' && <div
+            {panel === 'notifications' && <div id="mobile-notifications-menu" role="region" aria-label="Notifications"
                 className="absolute right-3 top-16 w-[calc(100%-1.5rem)] rounded-md border border-border bg-white p-2 shadow-xl">
                 <h2 className="p-2 text-sm font-bold">Notifications</h2>{state.notifications.map((item) => <button
                 key={item.id} className="block w-full rounded p-3 text-left hover:bg-[#e8f3ff]" onClick={() => {
@@ -235,7 +242,7 @@ function MobileHeader() {
                 setPanel(null)
             }}><strong className="block text-xs">{item.title}</strong><span
                 className="text-[10px] text-muted">{item.detail}</span></button>)}</div>}{panel === 'profile' && <div
-            className="absolute right-3 top-16 w-52 rounded-md border border-border bg-white p-2 text-sm shadow-xl">
+            id="mobile-profile-menu" role="region" aria-label="Profile options" className="absolute right-3 top-16 w-52 rounded-md border border-border bg-white p-2 text-sm shadow-xl">
             <button className="block w-full rounded p-3 text-left hover:bg-[#e8f3ff]" onClick={() => {
                 navigate('/health-records');
                 setPanel(null)
@@ -248,7 +255,7 @@ function MobileHeader() {
             </button>
         </div>}</div>
         {open && <div className="fixed inset-0 z-50 bg-black/40 md:hidden">
-            <aside className="h-full w-72 overflow-y-auto bg-navy p-3">
+            <aside ref={drawerRef} id="mobile-navigation-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu" className="h-full w-72 overflow-y-auto bg-navy p-3">
                 <div className="mb-4 flex items-center justify-between text-white"><strong>CareConnect</strong>
                     <button onClick={() => setOpen(false)} aria-label="Close navigation" className="rounded p-2"><X/>
                     </button>
@@ -256,10 +263,10 @@ function MobileHeader() {
                 <div className="relative mb-4"><Search className="absolute left-3 top-2.5 text-[#8eb0c4]"
                                                        size={16}/><input value={search}
                                                                          onChange={(event) => setSearch(event.target.value)}
-                                                                         aria-label="Search CareConnect"
+                                                                         type="search" role="searchbox" aria-label="Search CareConnect" aria-controls="mobile-search-results" aria-expanded={Boolean(search)}
                                                                          placeholder="Search CareConnect"
                                                                          className="h-10 w-full rounded-md border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white placeholder:text-[#8eb0c4]"/>{search &&
-                    <div
+                    <div id="mobile-search-results" role="region" aria-label="Search results"
                         className="mt-1 overflow-hidden rounded-md bg-white">{mobileResults.length ? mobileResults.map((result) =>
                             <button key={result.key}
                                     className="block w-full border-b border-border p-3 text-left text-xs text-ink"
@@ -276,21 +283,27 @@ function MobileHeader() {
     </>
 }
 
-function OfflineNotice() {
-    const {online, pendingSync} = useCareConnect();
-    if (online) return null;
-    return <div role="status"
-                className="fixed inset-x-0 bottom-0 z-50 bg-[#8a3b12] px-4 py-3 text-center text-sm font-semibold text-white">You’re
-        offline. Your data is saved on this
-        device{pendingSync ? ` (${pendingSync} change${pendingSync === 1 ? '' : 's'} queued)` : ''} and will sync when
-        your connection returns.</div>
+function ConnectionStatus() {
+    const {online, pendingSync, needsAttention, syncing, lastSync} = useCareConnect()
+    if (online && !pendingSync && !needsAttention && !syncing) return null
+    const last = lastSync ? new Date(lastSync).toLocaleString() : 'not yet synchronized'
+    return <div role="status" className={`fixed inset-x-0 bottom-0 z-50 px-4 py-3 text-center text-sm font-semibold text-white ${online ? 'bg-action' : 'bg-[#8a3b12]'}`}>
+        {!online ? `You’re offline. Cached information may not be current. Changes are saved locally and will sync when the connection returns.` : syncing ? 'Demo synchronization is in progress.' : 'Some locally saved changes are waiting to synchronize.'}
+        {pendingSync > 0 && ` ${pendingSync} change${pendingSync === 1 ? '' : 's'} waiting.`}
+        {needsAttention > 0 && ` ${needsAttention} change${needsAttention === 1 ? '' : 's'} need attention.`} Last demo sync: {last}.
+    </div>
 }
 
 export default function AppShell({children}: { children: ReactNode }) {
+    const location = useLocation()
+    const pwa = usePwaLifecycle(location.pathname)
     return <div className="min-h-screen bg-canvas">{ <a href="#main-content"
                                                       className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:bg-white focus:p-3">Skip
-        to content</a> }<BrandBar/><Toolbar/><DesktopSidebar/><TabletSidebar/><MobileHeader/>
+        to content</a> }<BrandBar/><Toolbar showInstall={pwa.showInstall && pwa.canPromptInstall} install={pwa.install}/><DesktopSidebar/><TabletSidebar/><MobileHeader/>
         <main id="main-content"
               className="min-h-screen pb-12 pt-[94px] md:ml-16 md:pt-[82px] lg:ml-[210px]">{children}</main>
-        <OfflineNotice/></div>
+        <ConnectionStatus/>
+        {pwa.showInstall && <div className="fixed bottom-5 left-1/2 z-[60] w-[min(92vw,34rem)] -translate-x-1/2 rounded-lg border border-border bg-white p-4 shadow-xl" role="region" aria-label="Install CareConnect"><strong className="text-sm">Install CareConnect</strong><p className="mt-1 text-xs text-muted">Install for faster access and offline availability of previously viewed demo records.</p>{pwa.isIos && !pwa.canPromptInstall && <p className="mt-2 text-xs">In Safari, use Share, then Add to Home Screen.</p>}<div className="mt-3 flex gap-2">{pwa.canPromptInstall && <button className="rounded-md bg-action px-4 py-2 text-xs font-bold text-white" onClick={() => void pwa.install()}>Install</button>}<button className="rounded-md border border-[#718692] px-4 py-2 text-xs" onClick={pwa.dismissInstall}>Not now</button></div></div>}
+        {pwa.updateAvailable && <div className="fixed bottom-5 right-5 z-[65] max-w-sm rounded-lg bg-navy p-4 text-white shadow-xl" role="status"><strong className="text-sm">A new version of CareConnect is available.</strong><p className="mt-1 text-xs text-[#d7e4eb]">Locally saved work will be preserved.</p>{pwa.updateBlocked && <p className="mt-2 text-xs font-bold text-white">Save or cancel the open form before updating.</p>}<div className="mt-3 flex gap-2"><button className="rounded bg-white px-3 py-2 text-xs font-bold text-navy" onClick={pwa.applyUpdate}>Update now</button><button className="rounded border border-white/50 px-3 py-2 text-xs" onClick={pwa.deferUpdate}>Later</button></div></div>}
+    </div>
 }
