@@ -5,10 +5,12 @@ import {Field} from '../components/dialogs/Dialog'
 import {Button, Card} from '../components/ui/Primitives'
 import type {Medication} from '../data/careconnect'
 import {useCareConnect} from '../state/careConnectContext'
+import {usePageHeadingFocus} from '../hooks/usePageHeadingFocus'
 
 export default function AddMedicationPage() {
     const navigate = useNavigate();
-    const {dispatch, notify, openModal} = useCareConnect();
+    const headingRef = usePageHeadingFocus()
+    const {dispatch, openModal} = useCareConnect();
     const [dirty, setDirty] = useState(false);
     const [times, setTimes] = useState(['08:00'])
     const cancel = () => dirty ? openModal({
@@ -36,15 +38,14 @@ export default function AddMedicationPage() {
             instructions: String(data.get('instructions'))
         }
         dispatch({type: 'add-medication', medication});
-        notify(`${name} was added.`);
         navigate('/medications')
     }
-    return <form onSubmit={submit} onChange={() => setDirty(true)}
+    return <form onSubmit={submit} onChange={() => setDirty(true)} data-pwa-unsaved={dirty}
                  className="mx-auto w-full max-w-[1290px] px-5 py-5 md:px-6 lg:px-[30px]">
         <div className="mb-6 flex flex-wrap items-center gap-4">
             <button type="button" onClick={cancel} aria-label="Back to medications"
                     className="rounded-md border border-border bg-white p-2"><ArrowLeft/></button>
-            <div><h1 className="font-serif text-[26px] font-bold text-navy">Add Medication</h1><p
+            <div><h1 ref={headingRef} tabIndex={-1} className="font-serif text-[26px] font-bold text-navy">Add Medication</h1><p
                 className="text-xs text-muted">Create a medication schedule and reminders.</p></div>
             <div className="ml-auto flex gap-2"><Button type="button" variant="secondary"
                                                         onClick={cancel}>Cancel</Button><Button type="submit">Save

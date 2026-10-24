@@ -1,4 +1,4 @@
-import {CalendarDays, MessageSquare, Plus} from 'lucide-react'
+import {CalendarDays, Plus} from 'lucide-react'
 import {InlineMessageAction} from '../components/care/CareCards'
 import {Avatar, Button, Card} from '../components/ui/Primitives'
 import {PageLayout} from '../components/ui/PageLayout'
@@ -31,5 +31,5 @@ export default function CareTeamPage() {
                 <Button variant="secondary" onClick={() => openModal({type: 'appointment'})}><CalendarDays size={15}/>Book
                     visit</Button>}</div>
         </Card>)}</div>
-        <span className="sr-only"><MessageSquare/></span></PageLayout>
+    </PageLayout>
 }

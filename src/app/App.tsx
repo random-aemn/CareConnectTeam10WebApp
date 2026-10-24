@@ -1,8 +1,9 @@
 import {lazy, Suspense, useEffect} from 'react'
-import {Navigate, Route, Routes, useLocation} from 'react-router-dom'
+import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom'
 import AppShell from '../layouts/AppShell'
 import WorkflowDialogs from '../components/dialogs/WorkflowDialogs'
 import {CareConnectProvider} from '../state/CareConnectProvider'
+import {useCareConnect} from '../state/careConnectContext'
 
 const OverviewPage = lazy(() => import('../pages/OverviewPage'))
 const AppointmentsPage = lazy(() => import('../pages/AppointmentsPage'))
@@ -23,8 +24,36 @@ function RouteTitle() {
     return null
 }
 
+function ShortcutLauncher() {
+    const location = useLocation()
+    const {openModal} = useCareConnect()
+    useEffect(() => {
+        const action = new URLSearchParams(location.search).get('action')
+        if (action === 'request-appointment') openModal({type: 'appointment'})
+    }, [location.search, openModal])
+    return null
+}
+
+function StandaloneStartPage() {
+    const location = useLocation()
+    const navigate = useNavigate()
+    useEffect(() => {
+        if (!window.matchMedia?.('(display-mode: standalone)').matches || location.pathname !== '/overview') return
+        if (sessionStorage.getItem('careconnect-start-page-restored') === 'true') return
+        sessionStorage.setItem('careconnect-start-page-restored', 'true')
+        try {
+            const preference = JSON.parse(localStorage.getItem('careconnect-web-preferences-v1') ?? '{}') as {startPage?: string}
+            const routes: Record<string, string> = {Appointments: '/appointments', Messages: '/messages'}
+            if (preference.startPage && routes[preference.startPage]) navigate(routes[preference.startPage], {replace: true})
+        } catch {
+            // Invalid local preferences fall back to Overview.
+        }
+    }, [location.pathname, navigate])
+    return null
+}
+
 export default function App() {
-    return <CareConnectProvider><AppShell><RouteTitle/><Suspense
+    return <CareConnectProvider><AppShell><RouteTitle/><ShortcutLauncher/><StandaloneStartPage/><Suspense
         fallback={<div role="status" className="p-8 text-sm text-muted">Loading CareConnect…</div>}><Routes><Route
         path="/" element={<Navigate to="/overview" replace/>}/><Route path="/overview" element={<OverviewPage/>}/><Route
         path="/appointments" element={<AppointmentsPage/>}/><Route path="/medications"

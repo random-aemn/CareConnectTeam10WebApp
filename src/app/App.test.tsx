@@ -18,6 +18,7 @@ describe('CareConnect routes', () => {
         expect(warningSpy).not.toHaveBeenCalled()
         errorSpy.mockRestore()
         warningSpy.mockRestore()
+        vi.unstubAllGlobals()
     })
 
     it('renders the overview route and primary navigation', async () => {
@@ -40,8 +41,9 @@ describe('CareConnect routes', () => {
 
     it('distinguishes appointment search results and opens the matching tab', async () => {
         render(<MemoryRouter initialEntries={['/overview']}><App/></MemoryRouter>)
-        fireEvent.change(await screen.findByRole('textbox', {name: 'Search CareConnect'}), {target: {value: 'sarah'}})
-        const pastResult = await screen.findByRole('option', {name: /Dr. Sarah Chen.*Aug 12, 2026.*Past/i})
+        const [desktopSearch] = await screen.findAllByRole('searchbox', {name: 'Search CareConnect'})
+        fireEvent.change(desktopSearch, {target: {value: 'sarah'}})
+        const pastResult = await screen.findByRole('button', {name: /Dr. Sarah Chen.*Aug 12, 2026.*Past/i})
         fireEvent.click(pastResult)
         expect(await screen.findByRole('tab', {name: 'Past'})).toHaveAttribute('aria-selected', 'true')
         expect(screen.getByText(/Aug 12, 2026/)).toBeInTheDocument()
@@ -53,5 +55,25 @@ describe('CareConnect routes', () => {
         expect(screen.getByRole('button', {name: /back to messages/i})).toBeInTheDocument()
         expect(screen.getByRole('heading', {name: 'Your recent lab results'})).toBeInTheDocument()
         expect(screen.queryByText('Hi Jordan,')).not.toBeInTheDocument()
+    })
+
+    it('opens the appointment workflow from the PWA shortcut URL', async () => {
+        render(<MemoryRouter initialEntries={['/appointments?action=request-appointment']}><App/></MemoryRouter>)
+        expect(await screen.findByRole('dialog', {name: 'Request an appointment'})).toBeInTheDocument()
+    })
+
+    it('restores the preferred start page in standalone mode', async () => {
+        vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({matches: true}))
+        localStorage.setItem('careconnect-web-preferences-v1', JSON.stringify({startPage: 'Messages'}))
+        render(<MemoryRouter initialEntries={['/overview']}><App/></MemoryRouter>)
+        expect(await screen.findByRole('heading', {name: 'Messages'})).toBeInTheDocument()
+    })
+
+    it('disables telehealth entry while offline', async () => {
+        const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+        render(<MemoryRouter initialEntries={['/appointments']}><App/></MemoryRouter>)
+        const join = await screen.findByRole('button', {name: 'Join'})
+        expect(join).toBeDisabled()
+        online.mockRestore()
     })
 })
