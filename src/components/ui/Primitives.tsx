@@ -26,6 +26,6 @@ export function Badge({children, tone = 'success'}: { children: ReactNode; tone?
 
 export function Avatar({initials, size = 'md'}: { initials: string; size?: 'sm' | 'md' | 'lg' }) {
     const sizes = {sm: 'size-7 text-[9px]', md: 'size-9 text-[11px]', lg: 'size-11 text-xs'}
-    return <span aria-hidden="true"
-        className={`inline-flex shrink-0 items-center justify-center rounded-full bg-action font-bold text-white ${sizes[size]}`}>{initials}</span>
+    return <span aria-hidden="true" data-initials={initials}
+        className={`avatar-initials inline-flex shrink-0 items-center justify-center rounded-full bg-action font-bold text-white ${sizes[size]}`}/>
 }

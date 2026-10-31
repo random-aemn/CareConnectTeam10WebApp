@@ -1,4 +1,4 @@
-import {useState, type FormEvent} from 'react'
+import {useRef, useState, type FormEvent} from 'react'
 import {useNavigate} from 'react-router-dom'
 import type {Appointment, Message} from '../../data/careconnect'
 import {useCareConnect} from '../../state/careConnectContext'
@@ -35,6 +35,7 @@ export default function WorkflowDialogs() {
     const {modal, closeModal, dispatch, notify} = useCareConnect()
     const navigate = useNavigate()
     const [appointmentError, setAppointmentError] = useState('')
+    const appointmentDateRef = useRef<HTMLInputElement>(null)
     if (!modal) return null
 
     const submitAppointment = (event: FormEvent<HTMLFormElement>) => {
@@ -45,6 +46,7 @@ export default function WorkflowDialogs() {
         const timeValue = String(data.get('time'))
         if (dateValue < todayValue()) {
             setAppointmentError('Choose today or a future date.');
+            window.setTimeout(() => appointmentDateRef.current?.focus())
             return
         }
         const old = modal.type === 'appointment' ? modal.appointment : undefined
@@ -103,7 +105,7 @@ export default function WorkflowDialogs() {
             <option>Dr. Marcus Webb</option>
             <option>Dr. Priya Nair</option>
         </select></Field>
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="Preferred date" required><input name="date" type="date"
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="Preferred date" required><input ref={appointmentDateRef} name="date" type="date"
                                                                                                  min={todayValue()}
                                                                                                  aria-invalid={Boolean(appointmentError)}
                                                                                                  aria-describedby={appointmentError ? 'appointment-date-error' : undefined}

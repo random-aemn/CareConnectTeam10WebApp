@@ -1,4 +1,4 @@
-const VERSION = 'v3'
+const VERSION = 'v6'
 const SHELL_CACHE = `careconnect-shell-${VERSION}`
 const STATIC_CACHE = `careconnect-static-${VERSION}`
 const RUNTIME_CACHE = `careconnect-runtime-${VERSION}`

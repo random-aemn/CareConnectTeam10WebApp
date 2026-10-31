@@ -44,7 +44,7 @@ export function usePwaLifecycle(pathname: string) {
         window.addEventListener('careconnect:workflow-complete', workflowCompleted)
 
         if ('serviceWorker' in navigator) {
-            void navigator.serviceWorker.register('/sw.js').then((registration) => {
+            void navigator.serviceWorker.register('/sw.js', {updateViaCache: 'none'}).then((registration) => {
                 if (registration.waiting) setUpdateRegistration(registration)
                 registration.addEventListener('updatefound', () => {
                     const worker = registration.installing
@@ -52,6 +52,7 @@ export function usePwaLifecycle(pathname: string) {
                         if (worker.state === 'installed' && navigator.serviceWorker.controller) setUpdateRegistration(registration)
                     })
                 })
+                void registration.update()
             })
             navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload())
         }

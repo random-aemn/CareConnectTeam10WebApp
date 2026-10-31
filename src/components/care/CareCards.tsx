@@ -1,17 +1,22 @@
 import {CalendarDays, ChevronRight, Ellipsis, MessageSquare, Pill, Video} from 'lucide-react'
-import {useState} from 'react'
+import {useCallback, useRef, useState} from 'react'
 import type {Appointment, Medication, Message} from '../../data/careconnect'
 import {Avatar, Badge, Button, Card} from '../ui/Primitives'
 import {useCareConnect} from '../../state/careConnectContext'
+import {useDismissiblePanel} from '../../hooks/useDismissiblePanel'
 
 export function AppointmentCard({appointment}: { appointment: Appointment }) {
     const {openModal, online, notify} = useCareConnect();
     const [menu, setMenu] = useState(false)
+    const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const menuPanelRef = useRef<HTMLDivElement>(null)
+    const closeMenu = useCallback(() => setMenu(false), [])
+    useDismissiblePanel(menu, menuButtonRef, menuPanelRef, closeMenu)
     const telehealth = appointment.type === 'Telehealth'
     return <Card className="flex min-h-52 flex-col p-4">
         <div className="flex items-center justify-between"><span className="icon-tile"><CalendarDays
             size={18}/></span><Badge tone={telehealth ? 'info' : 'success'}>{appointment.type}</Badge></div>
-        <h3 className="mt-3 text-[13px] font-bold text-ink">{appointment.provider}</h3>
+        <h2 className="mt-3 text-[13px] font-bold text-ink">{appointment.provider}</h2>
         <p className="mt-1 text-xs text-muted">{appointment.specialty}</p>
         <ul className="mt-4 space-y-1 text-xs text-muted">
             <li>• &nbsp;{appointment.date}</li>
@@ -22,9 +27,9 @@ export function AppointmentCard({appointment}: { appointment: Appointment }) {
             onClick={() => openModal({type: 'appointment', appointment})}>Reschedule</Button>{telehealth &&
             <Button disabled={!online} title={online ? undefined : 'Telehealth requires an internet connection'} onClick={() => online ? openModal({type: 'telehealth', appointment}) : notify('Telehealth requires an internet connection.')}><Video size={15}/>Join</Button>}</>}
             <div className="relative ml-auto">
-                <button className="rounded p-2" aria-label={`More options for ${appointment.provider}`}
-                        aria-controls={`appointment-menu-${appointment.id}`} aria-expanded={menu} onClick={() => setMenu(!menu)}><Ellipsis size={18}/></button>
-                {menu && <div
+                <button ref={menuButtonRef} className="rounded p-2" aria-label={`More options for ${appointment.provider}`}
+                        aria-controls={menu ? `appointment-menu-${appointment.id}` : undefined} aria-expanded={menu} onClick={() => setMenu(!menu)}><Ellipsis size={18}/></button>
+                {menu && <div ref={menuPanelRef}
                     id={`appointment-menu-${appointment.id}`} role="region" aria-label="Appointment options" className="absolute bottom-10 right-0 z-20 w-44 rounded-md border border-border bg-white p-1 text-xs shadow-xl">
                     <button onClick={() => {
                         openModal({type: 'appointment-details', appointment});
@@ -66,17 +71,19 @@ export function MedicationRow({medication, compact = false, interactive = false}
     </div>
 }
 
-export function MessageRow({message, selected = false}: { message: Message; selected?: boolean }) {
+export function MessageRow({message, selected = false, onSelect}: { message: Message; selected?: boolean; onSelect?: () => void }) {
     const correspondent = message.direction === 'outgoing' ? `To: ${message.recipient}` : message.sender
-    return <div
-        className={`grid grid-cols-[34px_1fr_auto] gap-3 border-b border-border p-4 ${selected ? 'bg-[#e8f3ff] shadow-[inset_2px_0_0_#0b68cf]' : 'bg-white'}`}>
+    const className = `grid min-h-11 w-full grid-cols-[34px_1fr_auto] gap-3 border-b border-border p-4 text-left ${selected ? 'bg-[#e8f3ff] shadow-[inset_2px_0_0_#0b68cf]' : 'bg-white'}`
+    const content = <>
         <Avatar initials={message.initials} size="sm"/>
-        <div className="min-w-0"><strong className="block truncate text-xs text-ink">{correspondent}</strong><span
+        <span className="min-w-0"><strong className="block truncate text-xs text-ink">{correspondent}</strong><span
             className="block truncate text-[11px] text-ink">{message.subject}</span><span
-            className="block truncate text-[10px] text-muted">{message.preview}</span></div>
-        <div className="flex items-start gap-2 text-[10px] text-muted"><span>{message.time}</span>{message.unread &&
-            <span className="mt-1 size-1.5 rounded-full bg-blue"/>}</div>
-    </div>
+            className="block truncate text-[10px] text-muted">{message.preview}</span></span>
+        <span className="flex items-start gap-2 text-[10px] text-muted"><span>{message.time}</span>{message.unread && <><span
+            aria-hidden="true" className="mt-1 size-1.5 rounded-full bg-blue"/><span className="sr-only">Unread</span></>}</span>
+    </>
+    return onSelect ? <button onClick={onSelect} aria-current={selected ? 'true' : undefined} className={className}>{content}</button> :
+        <div className={className}>{content}</div>
 }
 
 export function SummaryCard({icon, value, label, tone = 'blue', onClick}: {
