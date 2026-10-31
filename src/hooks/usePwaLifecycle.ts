@@ -43,24 +43,37 @@ export function usePwaLifecycle(pathname: string) {
         window.addEventListener('appinstalled', installed)
         window.addEventListener('careconnect:workflow-complete', workflowCompleted)
 
+        const controllerChanged = () => window.location.reload()
         if ('serviceWorker' in navigator) {
-            void navigator.serviceWorker.register('/sw.js', {updateViaCache: 'none'}).then((registration) => {
-                if (registration.waiting) setUpdateRegistration(registration)
-                registration.addEventListener('updatefound', () => {
-                    const worker = registration.installing
-                    worker?.addEventListener('statechange', () => {
-                        if (worker.state === 'installed' && navigator.serviceWorker.controller) setUpdateRegistration(registration)
+            if (import.meta.env.PROD) {
+                void navigator.serviceWorker.register('/sw.js', {updateViaCache: 'none'}).then((registration) => {
+                    if (registration.waiting) setUpdateRegistration(registration)
+                    registration.addEventListener('updatefound', () => {
+                        const worker = registration.installing
+                        worker?.addEventListener('statechange', () => {
+                            if (worker.state === 'installed' && navigator.serviceWorker.controller) setUpdateRegistration(registration)
+                        })
                     })
+                    void registration.update()
                 })
-                void registration.update()
-            })
-            navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload())
+                navigator.serviceWorker.addEventListener('controllerchange', controllerChanged)
+            } else {
+                void navigator.serviceWorker.getRegistrations()
+                    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+                    .then(async () => {
+                        if (!('caches' in globalThis)) return
+                        const keys = await caches.keys()
+                        await Promise.all(keys.filter((key) => key.startsWith('careconnect-')).map((key) => caches.delete(key)))
+                    })
+                    .catch(() => undefined)
+            }
         }
         return () => {
             window.clearTimeout(engagementTimer)
             window.removeEventListener('beforeinstallprompt', installPrompt)
             window.removeEventListener('appinstalled', installed)
             window.removeEventListener('careconnect:workflow-complete', workflowCompleted)
+            navigator.serviceWorker?.removeEventListener('controllerchange', controllerChanged)
         }
     }, [])
 
