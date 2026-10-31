@@ -16,12 +16,10 @@ export default function MessagesPage() {
         <Card className="grid min-h-[440px] overflow-hidden md:grid-cols-[40%_60%]">
             <div
                 className={`${mobileThread ? 'hidden md:block' : 'block'} border-r border-border`}>{state.messages.map((message) =>
-                <button key={message.id} onClick={() => {
+                <MessageRow key={message.id} message={message} selected={message.id === selected?.id} onSelect={() => {
                     dispatch({type: 'select-message', id: message.id});
                     setMobileThread(true)
-                }} aria-current={message.id === selected?.id ? 'true' : undefined} className="block min-h-11 w-full text-left"><MessageRow message={message}
-                                                                           selected={message.id === selected?.id}/>
-                </button>)}</div>
+                }}/>)}</div>
             {selected && <article className={`${mobileThread ? 'block' : 'hidden'} p-5 md:block md:p-8`}>
                 <button className="mb-5 inline-flex min-h-11 items-center gap-2 text-sm text-action md:hidden"
                         onClick={() => setMobileThread(false)}><ArrowLeft size={17}/>Back to messages

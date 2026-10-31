@@ -3,6 +3,8 @@
 /out-tsc/
 /tmp/
 /coverage/
+/lighthouse-reports/
+/.lighthouseci/
 /e2e/test-output/
 /.angular/
 .angular/

@@ -18,8 +18,9 @@ export function Dialog({title, description, children, actions, onClose, onSubmit
         if (!dialog) return
         opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
         dialog.showModal()
-        window.setTimeout(() => dialog.querySelector<HTMLElement>('input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])')?.focus())
+        const initialFocusTimer = window.setTimeout(() => dialog.querySelector<HTMLElement>('[autofocus], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])')?.focus())
         return () => {
+            window.clearTimeout(initialFocusTimer)
             const target = opener.current;
             window.setTimeout(() => target?.isConnected && target.focus())
         }
